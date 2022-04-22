@@ -165,8 +165,10 @@ public class FileManagementService {
 			fileLocation=s1.trim();
 			
 		}
-		
-		
+		while(fileLocation.contains("\\"))
+		{
+		fileLocation = fileLocation.replace("\\", "/");
+		}
 		logger.info(fileLocation);
 		return fileLocation;
 
