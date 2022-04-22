@@ -115,6 +115,7 @@ public class FileManagementService {
 							return new ResponseEntity(responseObject.toString(), HttpStatus.NOT_ACCEPTABLE);
 						}
 			String filePath=saveFile(inputStream,dirPath);
+			
 			fileNames.add(filePath);
 			
 		}
@@ -138,6 +139,7 @@ public class FileManagementService {
 	 */
 	private String saveFile(InputStream is, String fileLocation)  {
 		logger.info("saveFile --> " + fileLocation);
+		File file =new File(fileLocation);
 		try (OutputStream os = new FileOutputStream(new File(fileLocation))) {
 			byte[] buffer = new byte[256];
 			int bytes = 0;
@@ -149,6 +151,21 @@ public class FileManagementService {
 		} catch (IOException e) {
 			logger.info("IO excpetion "+e.getLocalizedMessage());
 		}
+		if(fileLocation.contains("/images"))
+		{
+			
+			String s1 = fileLocation.substring(fileLocation.indexOf("/images") + 1);
+			fileLocation=s1.trim();
+			logger.info(fileLocation);
+		}
+		if(fileLocation.contains("\\images"))
+		{
+			
+			String s1 = fileLocation.substring(fileLocation.indexOf("\\images") + 1);
+			fileLocation=s1.trim();
+			logger.info(fileLocation);
+		}
+		fileLocation = fileLocation.replaceAll("\\", "/");
 		return fileLocation;
 
 	}
