@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.logging.Logger;
 
 import javax.ws.rs.Consumes;
-import javax.ws.rs.Path;
 import javax.ws.rs.core.MediaType;
 
 import org.json.JSONObject;
@@ -21,8 +20,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -33,6 +30,7 @@ public class FileManagementService {
 	Logger logger = Logger.getLogger(FileManagementService.class.getName());
 	private String SERVER_UPLOAD_LOCATION_FOLDER = "";
 	private String STORAGE_SYSTEM="";
+	private String SERVER_URL="";
 	
 	@Autowired
     public FileManagementService(Environment env) {
@@ -40,6 +38,7 @@ public class FileManagementService {
         logger.info("UPLOAD Directory"+env.getProperty("upload-dir"));
         this.SERVER_UPLOAD_LOCATION_FOLDER =env.getProperty("upload-dir");
         this.STORAGE_SYSTEM = env.getProperty("storage_system");
+        this.SERVER_URL = env.getProperty("server.url");
         
     }
 	
@@ -80,7 +79,7 @@ public class FileManagementService {
 				e.printStackTrace();
 			}
 			String originalName = files[i].getOriginalFilename();
-			String name = files[i].getName();
+		    String name = files[i].getName();
 			String contentType = files[i].getContentType();
 			long size = files[i].getSize();
 
@@ -114,7 +113,7 @@ public class FileManagementService {
 							inputStream.close();
 							return new ResponseEntity(responseObject.toString(), HttpStatus.NOT_ACCEPTABLE);
 						}
-			String filePath=saveFile(inputStream,dirPath);
+			String filePath=saveFile(inputStream,dirPath,courseName,files[i].getOriginalFilename());
 			
 			fileNames.add(filePath);
 			
@@ -135,9 +134,11 @@ public class FileManagementService {
 	 * 
 	 * @param is
 	 * @param fileLocation
+	 * @param fileName 
+	 * @param courseName 
 	 * @throws IOException
 	 */
-	private String saveFile(InputStream is, String fileLocation)  {
+	private String saveFile(InputStream is, String fileLocation, String courseName, String fileName)  {
 		logger.info("saveFile --> " + fileLocation);
 		File file =new File(fileLocation);
 		try (OutputStream os = new FileOutputStream(new File(fileLocation))) {
@@ -151,26 +152,10 @@ public class FileManagementService {
 		} catch (IOException e) {
 			logger.info("IO excpetion "+e.getLocalizedMessage());
 		}
-		if(fileLocation.contains("/images"))
-		{
-			
-			String s1 = fileLocation.substring(fileLocation.indexOf("/images") + 1);
-			fileLocation=s1.trim();
-			
-		}
-		if(fileLocation.contains("\\images"))
-		{
-			
-			String s1 = fileLocation.substring(fileLocation.indexOf("\\images") + 1);
-			fileLocation=s1.trim();
-			
-		}
-		while(fileLocation.contains("\\"))
-		{
-		fileLocation = fileLocation.replace("\\", "/");
-		}
-		logger.info(fileLocation);
-		return fileLocation;
+		
+		String url=SERVER_URL+courseName+"/"+fileName;
+		logger.info("URL :"+url);
+		return url;
 
 	}
 }
