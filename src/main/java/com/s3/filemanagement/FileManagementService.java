@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
@@ -54,6 +55,7 @@ public class FileManagementService {
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@PostMapping(value = "/upload")
 	@ResponseBody
+	@CrossOrigin(origins = "http://localhost:8080")
 	public ResponseEntity<?> upload(@RequestPart("file") MultipartFile file,@RequestParam("course_name") String courseName) {
 		String fileName = "";
 		String dirPath = "";
