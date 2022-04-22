@@ -7,11 +7,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.logging.Logger;
 
+import javax.ws.rs.Consumes;
 import javax.ws.rs.Path;
+import javax.ws.rs.core.MediaType;
 
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,97 +53,78 @@ public class FileManagementService {
 	 * @param language
 	 *
 	 * @param file
-	 * @return 
-	 * @return 
 	 * @return
+	 * @throws IOException 
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	@PostMapping(value = "/upload")
-	@ResponseBody
-	@CrossOrigin(origins = "*")
-	public ResponseEntity upload(@RequestPart("files") MultipartFile[] files,@RequestParam("course_name") String courseName) {
-		
+	@PostMapping("/upload")
+	@Consumes(MediaType.MULTIPART_FORM_DATA)
+   	@CrossOrigin(origins = "*")
+	public ResponseEntity upload(@RequestParam("files") MultipartFile[] files,@RequestParam("course_name") String courseName) throws IOException {
+		String fileName = "";
+		String dirPath = "";
 
-		logger.info("*******************************UPLOAD FILE START**************************************************"
-				+ files.length);
-		logger.info("File Upload to ....... "+STORAGE_SYSTEM);
-		try {
-			
-			List<String> fileNames = new ArrayList<>();
-		      Arrays.asList(files).stream().forEach(file -> {
-		    	  String fileName = "";
-		  		  String dirPath = "";
-		    	  fileName = file.getOriginalFilename();
-					String fileType = fileName.substring(fileName.lastIndexOf('.') + 1);
-					logger.info("File Type Identified " + fileType);
-					
-					
-					InputStream fileInputStream = null;
-					
-						try {
-							fileInputStream = file.getInputStream();
-						
-					
-
-					
-						dirPath = SERVER_UPLOAD_LOCATION_FOLDER+File.separator+courseName;
-						logger.info("Uploading path "+dirPath);
-					
-					// create dir if not there
-					File dir = new File(dirPath);
-					if (!dir.exists()) {
-						dir.mkdirs();
-					}
-					dirPath = dirPath + File.separator + file.getOriginalFilename();
-					int fileNameLength = 0;
-					fileNameLength = fileName.length();
-					if (fileNameLength > 250) {
-						JSONObject responseObject = new JSONObject();
-						responseObject.put("status_code", HttpStatus.NOT_ACCEPTABLE);
-						responseObject.put("status_message", "FileName length cannot exceed 250 characters ");
-						logger.info("File name is exceeded ,its more than 250 characters ,please check");
-
-						fileInputStream.close();
-						
-					}
-		    	  
-					if("local".equals(STORAGE_SYSTEM))
-					{
-					String filePath=saveFile(fileInputStream,dirPath);
-					fileNames.add(filePath);
-					}
-					
-						} catch (IOException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
-		        
-			
-		      });
-						
-		      JSONObject responseObject = new JSONObject();
-				responseObject.put("status_code", "200");
-				responseObject.put("status_message", "Upload successfully");
-				responseObject.put("result", fileNames);
-				logger.info("*******************************************END OF UPLOAD************************");			
-				return new ResponseEntity(responseObject.toString(), HttpStatus.OK);
-			// check filename length, if exceeds 50 return invalid filename
-			
-
-			
-			
-
-		} catch (Exception e) {
-			e.printStackTrace();
-			JSONObject responseObject = new JSONObject();
-			responseObject.put("status_code", HttpStatus.INTERNAL_SERVER_ERROR);
-			responseObject.put("status_message", e.getMessage());
-			logger.info("*******************************************END OF UPLOAD************************");
-
-			return new ResponseEntity(responseObject.toString(), HttpStatus.INTERNAL_SERVER_ERROR);
-		} finally {
-
+		if (files == null || files.length == 0) {
+			throw new RuntimeException("You must select at least one file for uploading");
 		}
+
+		StringBuilder sb = new StringBuilder(files.length);
+		ArrayList fileNames=new ArrayList();
+
+		for (int i = 0; i < files.length; i++) {
+			InputStream inputStream = null;
+			try {
+				inputStream = files[i].getInputStream();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			String originalName = files[i].getOriginalFilename();
+			String name = files[i].getName();
+			String contentType = files[i].getContentType();
+			long size = files[i].getSize();
+
+			sb.append("File Name: " + originalName + "\n");
+
+			logger.info("InputStream: " + inputStream);
+			logger.info("OriginalName: " + originalName);
+			logger.info("Name: " + name);
+			logger.info("ContentType: " + contentType);
+			logger.info("Size: " + size);
+			
+			dirPath = SERVER_UPLOAD_LOCATION_FOLDER + File.separator + courseName;
+			logger.info("Uploading path "+dirPath);
+			
+			// create dir if not there
+						File dir = new File(dirPath);
+						if (!dir.exists()) {
+							dir.mkdirs();
+						}
+						dirPath = dirPath + File.separator + files[i].getOriginalFilename();
+						
+						// check filename length, if exceeds 50 return invalid filename
+						int fileNameLength = 0;
+						fileNameLength = fileName.length();
+						if (fileNameLength > 250) {
+							JSONObject responseObject = new JSONObject();
+							responseObject.put("status_code", HttpStatus.NOT_ACCEPTABLE);
+							responseObject.put("status_message", "FileName length cannot exceed 250 characters ");
+							logger.info("File name is exceeded ,its more than 250 characters ,please check");
+
+							inputStream.close();
+							return new ResponseEntity(responseObject.toString(), HttpStatus.NOT_ACCEPTABLE);
+						}
+			String filePath=saveFile(inputStream,dirPath);
+			fileNames.add(filePath);
+			
+		}
+		
+		JSONObject responseObject = new JSONObject();
+		responseObject.put("status_code", HttpStatus.OK);
+		responseObject.put("status_message", "Uploaded Successfully ");
+		responseObject.put("result", fileNames);
+		return new ResponseEntity(responseObject.toString(), HttpStatus.OK);
+		
 		
 	} // method uploadFile
 
