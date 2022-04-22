@@ -156,16 +156,18 @@ public class FileManagementService {
 			
 			String s1 = fileLocation.substring(fileLocation.indexOf("/images") + 1);
 			fileLocation=s1.trim();
-			logger.info(fileLocation);
+			
 		}
 		if(fileLocation.contains("\\images"))
 		{
 			
 			String s1 = fileLocation.substring(fileLocation.indexOf("\\images") + 1);
 			fileLocation=s1.trim();
-			logger.info(fileLocation);
+			
 		}
-		fileLocation = fileLocation.replaceAll("\\", "/");
+		
+		
+		logger.info(fileLocation);
 		return fileLocation;
 
 	}
