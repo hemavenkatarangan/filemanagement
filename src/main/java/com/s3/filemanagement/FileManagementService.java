@@ -61,11 +61,11 @@ public class FileManagementService {
 	@PostMapping(value = "/upload")
 	@ResponseBody
 	@CrossOrigin(origins = "*")
-	public ResponseEntity upload(@RequestPart("files") MultipartFile files,@RequestParam("course_name") String courseName) {
+	public ResponseEntity upload(@RequestPart("files") MultipartFile[] files,@RequestParam("course_name") String courseName) {
 		
 
 		logger.info("*******************************UPLOAD FILE START**************************************************"
-				+ files.getName());
+				+ files.length);
 		logger.info("File Upload to ....... "+STORAGE_SYSTEM);
 		try {
 			
