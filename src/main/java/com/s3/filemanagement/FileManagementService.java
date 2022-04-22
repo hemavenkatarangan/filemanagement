@@ -6,6 +6,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.logging.Logger;
 
 import javax.ws.rs.Path;
@@ -50,71 +53,84 @@ public class FileManagementService {
 	 * @param language
 	 *
 	 * @param file
+	 * @return 
+	 * @return 
 	 * @return
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@PostMapping(value = "/upload")
 	@ResponseBody
-	@CrossOrigin(origins = "http://localhost:8080")
-	public ResponseEntity<?> upload(@RequestPart("file") MultipartFile file,@RequestParam("course_name") String courseName) {
-		String fileName = "";
-		String dirPath = "";
+	@CrossOrigin(origins = "*")
+	public ResponseEntity upload(@RequestPart("file") MultipartFile files,@RequestParam("course_name") String courseName) {
+		
 
 		logger.info("*******************************UPLOAD FILE START**************************************************"
-				+ file.getName());
+				+ files.getName());
 		logger.info("File Upload to ....... "+STORAGE_SYSTEM);
 		try {
-			fileName = file.getOriginalFilename();
-			String fileType = fileName.substring(fileName.lastIndexOf('.') + 1);
-			logger.info("File Type Identified " + fileType);
 			
-			
-			InputStream fileInputStream = file.getInputStream();
-
-			
-				dirPath = SERVER_UPLOAD_LOCATION_FOLDER+File.separator+courseName;
-				logger.info("Uploading path "+dirPath);
-			
-			// create dir if not there
-			File dir = new File(dirPath);
-			if (!dir.exists()) {
-				dir.mkdirs();
-			}
-			dirPath = dirPath + File.separator + file.getOriginalFilename();
-			
+			List<String> fileNames = new ArrayList<>();
+		      Arrays.asList(files).stream().forEach(file -> {
+		    	  String fileName = "";
+		  		  String dirPath = "";
+		    	  fileName = file.getOriginalFilename();
+					String fileType = fileName.substring(fileName.lastIndexOf('.') + 1);
+					logger.info("File Type Identified " + fileType);
+					
+					
+					InputStream fileInputStream = null;
+					
+						try {
+							fileInputStream = file.getInputStream();
 						
+					
 
-			// check filename length, if exceeds 50 return invalid filename
-			int fileNameLength = 0;
-			fileNameLength = fileName.length();
-			if (fileNameLength > 250) {
-				JSONObject responseObject = new JSONObject();
-				responseObject.put("status_code", HttpStatus.NOT_ACCEPTABLE);
-				responseObject.put("status_message", "FileName length cannot exceed 250 characters ");
-				logger.info("File name is exceeded ,its more than 250 characters ,please check");
+					
+						dirPath = SERVER_UPLOAD_LOCATION_FOLDER+File.separator+courseName;
+						logger.info("Uploading path "+dirPath);
+					
+					// create dir if not there
+					File dir = new File(dirPath);
+					if (!dir.exists()) {
+						dir.mkdirs();
+					}
+					dirPath = dirPath + File.separator + file.getOriginalFilename();
+					int fileNameLength = 0;
+					fileNameLength = fileName.length();
+					if (fileNameLength > 250) {
+						JSONObject responseObject = new JSONObject();
+						responseObject.put("status_code", HttpStatus.NOT_ACCEPTABLE);
+						responseObject.put("status_message", "FileName length cannot exceed 250 characters ");
+						logger.info("File name is exceeded ,its more than 250 characters ,please check");
 
-				fileInputStream.close();
-				return new ResponseEntity(responseObject.toString(), HttpStatus.NOT_ACCEPTABLE);
-			}
-
-			if("local".equals(STORAGE_SYSTEM))
-			{
-			String filePath=saveFile(fileInputStream,dirPath);
-			JSONObject responseObject = new JSONObject();
-			responseObject.put("status_code", "200");
-			responseObject.put("status_message", "Upload successfully");
-			responseObject.put("result", filePath);
-			logger.info("*******************************************END OF UPLOAD************************");			
-			return new ResponseEntity(responseObject.toString(), HttpStatus.OK);
-			}
-			else
-			{
-				JSONObject responseObject = new JSONObject();
-				responseObject.put("status_code", "403");
-				responseObject.put("status_message", "Storage system not defined");
+						fileInputStream.close();
+						
+					}
+		    	  
+					if("local".equals(STORAGE_SYSTEM))
+					{
+					String filePath=saveFile(fileInputStream,dirPath);
+					fileNames.add(filePath);
+					}
+					
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+		        
+			
+		      });
+						
+		      JSONObject responseObject = new JSONObject();
+				responseObject.put("status_code", "200");
+				responseObject.put("status_message", "Upload successfully");
+				responseObject.put("result", fileNames);
 				logger.info("*******************************************END OF UPLOAD************************");			
-				return new ResponseEntity(responseObject.toString(), HttpStatus.BAD_REQUEST);
-			}
+				return new ResponseEntity(responseObject.toString(), HttpStatus.OK);
+			// check filename length, if exceeds 50 return invalid filename
+			
+
+			
 			
 
 		} catch (Exception e) {
