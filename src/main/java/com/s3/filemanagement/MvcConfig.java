@@ -4,10 +4,11 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 
 @Configuration
 @EnableWebMvc
-public class MvcConfig implements WebMvcConfigurer {
+public class MvcConfig extends WebMvcConfigurerAdapter  {
     
     
     private static final String[] CLASSPATH_RESOURCE_LOCATIONS = {
@@ -21,18 +22,16 @@ public class MvcConfig implements WebMvcConfigurer {
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
     
-    
-        if (!registry.hasMappingForPattern("/webjars/**")) {
-    
-    
-            registry.addResourceHandler("/webjars/**").addResourceLocations(
-                    "classpath:/META-INF/resources/webjars/");
-        }
+    	registry.addResourceHandler("/**").addResourceLocations(
+                "file:src/main/resources/public/"
+            );
+        
         if (!registry.hasMappingForPattern("/**")) {
     
     
             registry.addResourceHandler("/**").addResourceLocations(
                     CLASSPATH_RESOURCE_LOCATIONS);
+            
         }   
     }
  }
